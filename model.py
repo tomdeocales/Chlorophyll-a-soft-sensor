@@ -8,17 +8,16 @@ import re
 import time
 from datetime import datetime
 
-# Firebase config (API key, database URL, etc.)
 firebase_config = {
-    "apiKey": "AIzaSyAD-wZBdqqpMrXng0BKFSIiJw9jzL_xzjA",
-    "authDomain": "lake-d30ad.firebaseapp.com",
-    "databaseURL": "https://lake-d30ad-default-rtdb.asia-southeast1.firebasedatabase.app",
-    "projectId": "lake-d30ad",
-    "storageBucket": "lake-d30ad.firebasestorage.app",
-    "messagingSenderId": "633397665516",
-    "appId": "1:633397665516:web:9545c24d528da466544fc9"
+  "apiKey": "AIzaSyDPEsepXURaLo-Pz3S-NECYsO1vPGKYEqM",
+  "authDomain": "chlorowatch.firebaseapp.com",
+  "databaseURL": "https://chlorowatch-default-rtdb.asia-southeast1.firebasedatabase.app",
+  "projectId": "chlorowatch",
+  "storageBucket": "chlorowatch.firebasestorage.app",
+  "messagingSenderId": "1079557994846",
+  "appId": "1:1079557994846:web:dcb2513116b13feff437cf",
+  "measurementId": "G-HHJMQ7F6V8"
 }
-
 # Firebase Realtime Database URL
 database_url = firebase_config['databaseURL']
 
@@ -130,13 +129,14 @@ def save_prediction_to_firebase(predicted_chlorophyll, sensor_data, forecast_val
 
     # Push the prediction and forecast data to Firebase
     prediction_ref = f'{database_url}/Predictions.json'
+    timestamp = (pd.Timestamp.now() + pd.Timedelta(hours=8)).strftime('%Y-%m-%d %H:%M:%S')
     data = {
         **sensor_data_values,
         'Predicted_Chlorophyll': predicted_chlorophyll,
         'Forecasted_Chlorophyll': first_forecast_value,
         'Upper_Bound_Chlorophyll': first_upper_bound,
         'Lower_Bound_Chlorophyll': first_lower_bound,
-        'timestamp': pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S')
+        'timestamp': timestamp
     }
     response = requests.post(prediction_ref, json=data)
 
