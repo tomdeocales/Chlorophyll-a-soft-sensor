@@ -11,7 +11,7 @@ import time
 
 # Initialize Firebase Admin SDK
 if not firebase_admin._apps:
-    cred = credentials.Certificate('chlorowatch-firebase-adminsdk-j2ny5-7622b33c47.json') # Automatic credentials from environment
+    cred = credentials.Certificate('chlorowatch-firebase-adminsdk-j2ny5-d2d1b03847.json') # Automatic credentials from environment
     firebase_admin.initialize_app(cred, {
         'databaseURL': 'https://chlorowatch-default-rtdb.asia-southeast1.firebasedatabase.app/'
     })
