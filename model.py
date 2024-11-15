@@ -2,19 +2,25 @@ import streamlit as st
 import pandas as pd
 import joblib
 import numpy as np
-import firebase_admin
-from firebase_admin import credentials, db
-from sklearn.preprocessing import StandardScaler
-from datetime import datetime
+import requests
+import json
 import re
 import time
+from datetime import datetime
 
-# Initialize Firebase Admin SDK
-if not firebase_admin._apps:
-    cred = credentials.Certificate('chlorowatch-firebase-adminsdk-j2ny5-d2d1b03847.json') # Automatic credentials from environment
-    firebase_admin.initialize_app(cred, {
-        'databaseURL': 'https://chlorowatch-default-rtdb.asia-southeast1.firebasedatabase.app/'
-    })
+# Firebase config (API key, database URL, etc.)
+firebase_config = {
+    "apiKey": "AIzaSyAD-wZBdqqpMrXng0BKFSIiJw9jzL_xzjA",
+    "authDomain": "lake-d30ad.firebaseapp.com",
+    "databaseURL": "https://lake-d30ad-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "projectId": "lake-d30ad",
+    "storageBucket": "lake-d30ad.firebasestorage.app",
+    "messagingSenderId": "633397665516",
+    "appId": "1:633397665516:web:9545c24d528da466544fc9"
+}
+
+# Firebase Realtime Database URL
+database_url = firebase_config['databaseURL']
 
 # Load the stacking model and scaler
 stacking_model_loaded = joblib.load('stacking_ensemble_model.joblib')
@@ -36,32 +42,39 @@ def sanitize_dict(d):
     else:
         return d
 
-# Function to fetch the latest sensor data from Firebase
+# Function to fetch the latest sensor data from Firebase using the REST API
 def get_latest_sensor_data():
     try:
-        sensor_data_ref = db.reference('/SensorData')
-        sensor_data = sensor_data_ref.order_by_child("timestamp").limit_to_last(1).get()
-        latest_data = next(iter(sensor_data.values()))  # Get the latest sensor data
+        sensor_data_ref = f'{database_url}/SensorData.json'
+        response = requests.get(sensor_data_ref)
+        
+        if response.status_code == 200:
+            sensor_data = response.json()
+            # Sort the data by timestamp and get the latest entry
+            latest_data = max(sensor_data.values(), key=lambda x: x['timestamp'])
+            
+            # Sanitize the data and extract timestamp
+            sanitized_data = sanitize_dict(latest_data)
+            timestamp = datetime.fromtimestamp(sanitized_data['timestamp'] / 1000.0)
 
-        # Sanitize the data and extract timestamp
-        sanitized_data = sanitize_dict(latest_data)
-        timestamp = datetime.fromtimestamp(sanitized_data['timestamp'] / 1000.0)
-
-        # Prepare the sensor data as a DataFrame
-        sensor_df = pd.DataFrame({
-            'Temp (°C)': [sanitized_data['Temperature']],
-            'Turbidity (FNU)': [sanitized_data['Turbidity']],
-            'pH': [sanitized_data['pH']],
-            'DO (mg/L)': [sanitized_data['DissolvedOxygen']],
-            'year': [timestamp.year],
-            'month': [timestamp.month],
-            'day': [timestamp.day],
-            'day_of_week': [timestamp.weekday()],
-            'day_of_year': [timestamp.timetuple().tm_yday],
-            'quarter': [(timestamp.month - 1) // 3 + 1],
-            'hour': [timestamp.hour]
-        })
-        return sensor_df, timestamp
+            # Prepare the sensor data as a DataFrame
+            sensor_df = pd.DataFrame({
+                'Temp (°C)': [sanitized_data['Temperature']],
+                'Turbidity (FNU)': [sanitized_data['Turbidity']],
+                'pH': [sanitized_data['pH']],
+                'DO (mg/L)': [sanitized_data['DissolvedOxygen']],
+                'year': [timestamp.year],
+                'month': [timestamp.month],
+                'day': [timestamp.day],
+                'day_of_week': [timestamp.weekday()],
+                'day_of_year': [timestamp.timetuple().tm_yday],
+                'quarter': [(timestamp.month - 1) // 3 + 1],
+                'hour': [timestamp.hour]
+            })
+            return sensor_df, timestamp
+        else:
+            st.write(f"Error fetching data from Firebase: {response.text}")
+            return pd.DataFrame(), None
     except Exception as e:
         st.write(f"Error fetching data from Firebase: {e}")
         return pd.DataFrame(), None
@@ -100,7 +113,7 @@ def forecast_future_chlorophyll(df, stacking_model, scaler, features, steps=10, 
 
     return forecasts, upper_bounds, lower_bounds
 
-# Save predictions and forecasts to Firebase (only first index)
+# Save predictions and forecasts to Firebase using the REST API
 def save_prediction_to_firebase(predicted_chlorophyll, sensor_data, forecast_values, upper_bounds, lower_bounds):
     predicted_chlorophyll = float(predicted_chlorophyll)
     
@@ -116,21 +129,30 @@ def save_prediction_to_firebase(predicted_chlorophyll, sensor_data, forecast_val
     }
 
     # Push the prediction and forecast data to Firebase
-    prediction_ref = db.reference('/Predictions').push()
-    prediction_ref.set({
+    prediction_ref = f'{database_url}/Predictions.json'
+    data = {
         **sensor_data_values,
         'Predicted_Chlorophyll': predicted_chlorophyll,
-        'Forecasted_Chlorophyll': first_forecast_value,  # Store only the first forecast
-        'Upper_Bound_Chlorophyll': first_upper_bound,    # Store only the first upper bound
-        'Lower_Bound_Chlorophyll': first_lower_bound,    # Store only the first lower bound
+        'Forecasted_Chlorophyll': first_forecast_value,
+        'Upper_Bound_Chlorophyll': first_upper_bound,
+        'Lower_Bound_Chlorophyll': first_lower_bound,
         'timestamp': pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S')
-    })
+    }
+    response = requests.post(prediction_ref, json=data)
+
+    if response.status_code != 200:
+        st.write(f"Error saving prediction: {response.text}")
 
     # Update the current prediction separately
-    current_data_ref = db.reference('/CurrentPrediction')
-    current_data_ref.set({
+    current_prediction_ref = f'{database_url}/CurrentPrediction.json'
+    current_data = {
         'Predicted_Chlorophyll': predicted_chlorophyll,
-    })
+    }
+    # Make a PUT request to update the current prediction
+    current_response = requests.put(current_prediction_ref, json=current_data)
+
+    if current_response.status_code != 200:
+        st.write(f"Error updating current prediction: {current_response.text}")
 
 # Main app logic
 if __name__ == '__main__':
