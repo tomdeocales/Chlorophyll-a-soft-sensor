@@ -6,7 +6,7 @@ import requests
 import json
 import re
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 import threading
 
 # Firebase Configuration
@@ -57,7 +57,7 @@ def get_latest_sensor_data():
             # Sanitize the data and extract timestamp
             sanitized_data = sanitize_dict(latest_data)
             timestamp = datetime.fromtimestamp(sanitized_data['timestamp'] / 1000.0)
-
+            timestamp = timestamp + timedelta(hours=8)
             # Prepare the sensor data as a DataFrame
             sensor_df = pd.DataFrame({
                 'Temp (°C)': [sanitized_data['Temperature']],
