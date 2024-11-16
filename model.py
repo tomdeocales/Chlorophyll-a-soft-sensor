@@ -7,16 +7,18 @@ import json
 import re
 import time
 from datetime import datetime
+import threading
 
+# Firebase Configuration
 firebase_config = {
-  "apiKey": "AIzaSyDPEsepXURaLo-Pz3S-NECYsO1vPGKYEqM",
-  "authDomain": "chlorowatch.firebaseapp.com",
-  "databaseURL": "https://chlorowatch-default-rtdb.asia-southeast1.firebasedatabase.app",
-  "projectId": "chlorowatch",
-  "storageBucket": "chlorowatch.firebasestorage.app",
-  "messagingSenderId": "1079557994846",
-  "appId": "1:1079557994846:web:dcb2513116b13feff437cf",
-  "measurementId": "G-HHJMQ7F6V8"
+    "apiKey": "AIzaSyDPEsepXURaLo-Pz3S-NECYsO1vPGKYEqM",
+    "authDomain": "chlorowatch.firebaseapp.com",
+    "databaseURL": "https://chlorowatch-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "projectId": "chlorowatch",
+    "storageBucket": "chlorowatch.firebasestorage.app",
+    "messagingSenderId": "1079557994846",
+    "appId": "1:1079557994846:web:dcb2513116b13feff437cf",
+    "measurementId": "G-HHJMQ7F6V8"
 }
 # Firebase Realtime Database URL
 database_url = firebase_config['databaseURL']
@@ -154,18 +156,8 @@ def save_prediction_to_firebase(predicted_chlorophyll, sensor_data, forecast_val
     if current_response.status_code != 200:
         st.write(f"Error updating current prediction: {current_response.text}")
 
-# Main app logic
-if __name__ == '__main__':
-    st.write("## Fetching and Predicting Chlorophyll Values...")
-
-    # Placeholder for DataFrame display
-    table_placeholder = st.empty()
-
-    # Initialize a DataFrame for sensor data and forecast columns
-    sensor_data_display = pd.DataFrame(columns=['Temp (°C)', 'Turbidity (FNU)', 'pH', 'DO (mg/L)', 'Predicted_Chlorophyll (ug/L)', 
-                                               'Forecasted_Chlorophyll (ug/L)', 'Upper Bound (ug/L)', 'Lower Bound (ug/L)'])
-
-    # Continuous monitoring of Firebase
+# Background task to periodically fetch data, make predictions, and save to Firebase
+def background_task():
     last_timestamp = None
 
     while True:
@@ -191,23 +183,17 @@ if __name__ == '__main__':
                 # Save the prediction and forecast to Firebase
                 save_prediction_to_firebase(y_new_pred[0], fetched_sensor_data, future_forecasts, upper_bounds, lower_bounds)
 
-                # Update the sensor data display DataFrame
-                sensor_data_display = pd.DataFrame({
-                    'Temp (°C)': fetched_sensor_data['Temp (°C)'],
-                    'Turbidity (FNU)': fetched_sensor_data['Turbidity (FNU)'],
-                    'pH': fetched_sensor_data['pH'],
-                    'DO (mg/L)': fetched_sensor_data['DO (mg/L)'],
-                    'Predicted_Chlorophyll (ug/L)': y_new_pred[0],
-                    'Forecasted_Chlorophyll (ug/L)': future_forecasts[0],  # Take the first forecast as example
-                    'Upper Bound (ug/L)': upper_bounds[0],
-                    'Lower Bound (ug/L)': lower_bounds[0]
-                })
-
-                # Display the updated data
-                table_placeholder.dataframe(sensor_data_display)
-
         else:
             st.write("No sensor data found. Please check your Firebase database.")
 
         # Wait for a short time before checking for new data again
-        time.sleep(5)  # Adjust time interval as necessary
+        time.sleep(0)  # Adjust time interval as necessary
+
+# Start background task in a separate thread
+if __name__ == '__main__':
+    # Start the background task in a separate thread
+    threading.Thread(target=background_task, daemon=True).start()
+
+    # Main Streamlit app code (will run continuously while the background task works)
+    st.write("## Continuous Chlorophyll Prediction and Forecasting")
+    st.write("Prediction tasks are running in the background, check Firebase for updated predictions.")
