@@ -187,11 +187,12 @@ def background_task():
             st.write("No sensor data found. Please check your Firebase database.")
 
 
-# Start background task in a separate thread
 if __name__ == '__main__':
-    # Start the background task in a separate thread
-    threading.Thread(target=background_task, daemon=True).start()
+    # Check if the background task is already running, if not, start it
+    if not st.session_state.background_task_started:
+        st.session_state.background_task_started = True
+        threading.Thread(target=background_task, daemon=True).start()
 
-    # Main Streamlit app code (will run continuously while the background task works)
+    # Main Streamlit app code
     st.write("## Continuous Chlorophyll Prediction and Forecasting")
     st.write("Prediction tasks are running in the background, check Firebase for updated predictions.")
