@@ -186,8 +186,6 @@ def background_task():
         else:
             st.write("No sensor data found. Please check your Firebase database.")
 
-        # Wait for a short time before checking for new data again
-        time.sleep(0)  # Adjust time interval as necessary
 
 # Start background task in a separate thread
 if __name__ == '__main__':
