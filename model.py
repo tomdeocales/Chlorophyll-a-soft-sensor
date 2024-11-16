@@ -5,20 +5,20 @@ import numpy as np
 import requests
 import json
 import re
-import time
-from datetime import datetime, timedelta
+import pytz
+from datetime import datetime
 import threading
+
 
 # Firebase Configuration
 firebase_config = {
-    "apiKey": "AIzaSyDPEsepXURaLo-Pz3S-NECYsO1vPGKYEqM",
-    "authDomain": "chlorowatch.firebaseapp.com",
-    "databaseURL": "https://chlorowatch-default-rtdb.asia-southeast1.firebasedatabase.app",
-    "projectId": "chlorowatch",
-    "storageBucket": "chlorowatch.firebasestorage.app",
-    "messagingSenderId": "1079557994846",
-    "appId": "1:1079557994846:web:dcb2513116b13feff437cf",
-    "measurementId": "G-HHJMQ7F6V8"
+    "apiKey": "AIzaSyC7L054AGsvX8g9wuVS2hXlJnQqh8lpGjg",
+  "authDomain": "tadlac-lake.firebaseapp.com",
+  "databaseURL": "https://tadlac-lake-default-rtdb.asia-southeast1.firebasedatabase.app",
+  "projectId": "tadlac-lake",
+  "storageBucket": "tadlac-lake.firebasestorage.app",
+  "messagingSenderId": "525847649799",
+  "appId": "1:525847649799:web:d70167ddbd3861b1f9d4a2"
 }
 # Firebase Realtime Database URL
 database_url = firebase_config['databaseURL']
@@ -57,7 +57,9 @@ def get_latest_sensor_data():
             # Sanitize the data and extract timestamp
             sanitized_data = sanitize_dict(latest_data)
             timestamp = datetime.fromtimestamp(sanitized_data['timestamp'] / 1000.0)
-            timestamp = timestamp + timedelta(hours=8)
+            singapore_tz = pytz.timezone('Asia/Singapore')
+            timestamp = timestamp.replace(tzinfo=pytz.utc).astimezone(singapore_tz)
+
             # Prepare the sensor data as a DataFrame
             sensor_df = pd.DataFrame({
                 'Temp (°C)': [sanitized_data['Temperature']],
@@ -131,7 +133,8 @@ def save_prediction_to_firebase(predicted_chlorophyll, sensor_data, forecast_val
 
     # Push the prediction and forecast data to Firebase
     prediction_ref = f'{database_url}/Predictions.json'
-    timestamp = (pd.Timestamp.now() + pd.Timedelta(hours=8)).strftime('%Y-%m-%d %H:%M:%S')
+    singapore_tz = pytz.timezone('Asia/Singapore')
+    timestamp = datetime.now(singapore_tz).strftime('%Y-%m-%d %H:%M:%S')
     data = {
         **sensor_data_values,
         'Predicted_Chlorophyll': predicted_chlorophyll,
