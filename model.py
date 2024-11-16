@@ -158,7 +158,9 @@ def save_prediction_to_firebase(predicted_chlorophyll, sensor_data, forecast_val
 
 # Background task to periodically fetch data, make predictions, and save to Firebase
 def background_task():
-    last_timestamp = None
+    # Use session_state to track the last processed timestamp
+    if 'last_processed_timestamp' not in st.session_state:
+        st.session_state.last_processed_timestamp = None
 
     while True:
         # Fetch the latest sensor data
@@ -166,8 +168,8 @@ def background_task():
 
         if not fetched_sensor_data.empty:
             # Check if the timestamp is new (to avoid redundant processing)
-            if timestamp != last_timestamp:
-                last_timestamp = timestamp  # Update last timestamp
+            if timestamp != st.session_state.last_processed_timestamp:
+                st.session_state.last_processed_timestamp = timestamp  # Update last processed timestamp
 
                 # Define the features used for prediction
                 features = ['Temp (°C)', 'Turbidity (FNU)', 'pH', 'DO (mg/L)', 'year', 'month', 'day', 'day_of_week', 'day_of_year', 'quarter', 'hour']
@@ -185,6 +187,9 @@ def background_task():
 
         else:
             st.write("No sensor data found. Please check your Firebase database.")
+
+        # Wait before fetching new data (to prevent constant polling)
+        time.sleep(60)  # Check every minute
 
 
 # Start background task in a separate thread
