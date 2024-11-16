@@ -5,3 +5,4 @@ numpy
 requests
 scikit-learn
 xgboost
+threading
