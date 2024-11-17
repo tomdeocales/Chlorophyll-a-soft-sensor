@@ -14,7 +14,7 @@ import threading
 firebase_config = {
     "apiKey": "AIzaSyAwZRqZ3nkYJ-2zcm3g7sUBL1mIUNuPO1A",
   "authDomain": "tadlac-299f8.firebaseapp.com",
-    "databaseURL": "https://tadlac-299f8-default-rtdb.asia-southeast1.firebasedatabase.app",
+  "databaseURL": "https://tadlac-299f8-default-rtdb.asia-southeast1.firebasedatabase.app",
   "projectId": "tadlac-299f8",
   "storageBucket": "tadlac-299f8.firebasestorage.app",
   "messagingSenderId": "568323038212",
