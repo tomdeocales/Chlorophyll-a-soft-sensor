@@ -162,7 +162,6 @@ def save_prediction_to_firebase(predicted_chlorophyll, sensor_data, forecast_val
 
 # Background task to periodically fetch data, make predictions, and save to Firebase
 def background_task():
-    # Use session_state to track the last processed timestamp
     if 'last_processed_timestamp' not in st.session_state:
         st.session_state.last_processed_timestamp = None
 
@@ -171,26 +170,22 @@ def background_task():
         fetched_sensor_data, timestamp = get_latest_sensor_data()
 
         if not fetched_sensor_data.empty:
-            # Check if the timestamp is new (to avoid redundant processing)
+            # Check if the timestamp has changed (to avoid processing the same data)
             if timestamp != st.session_state.last_processed_timestamp:
-                st.session_state.last_processed_timestamp = timestamp  # Update last processed timestamp
+                st.session_state.last_processed_timestamp = timestamp
 
-                # Define the features used for prediction
+                # Proceed with prediction and saving logic
                 features = ['Temp (°C)', 'Turbidity (FNU)', 'pH', 'DO (mg/L)', 'year', 'month', 'day', 'day_of_week', 'day_of_year', 'quarter', 'hour']
                 X_new_scaled = scaler_loaded.transform(fetched_sensor_data[features])
-
-                # Prediction
                 y_new_pred_log = stacking_model_loaded.predict(X_new_scaled)
-                y_new_pred = np.expm1(y_new_pred_log)  # Reverse the log transformation
+                y_new_pred = np.expm1(y_new_pred_log)
 
-                # Forecast the next 10 intervals, with upper and lower bounds
                 future_forecasts, upper_bounds, lower_bounds = forecast_future_chlorophyll(fetched_sensor_data, stacking_model_loaded, scaler_loaded, features, steps=10)
-
-                # Save the prediction and forecast to Firebase
                 save_prediction_to_firebase(y_new_pred[0], fetched_sensor_data, future_forecasts, upper_bounds, lower_bounds)
-
         else:
-            st.write("No sensor data found. Please check your Firebase database.")
+            st.write("No new sensor data.")
+        
+        time.sleep(60)  # Wait 60 seconds before fetching new data
 
 
 
