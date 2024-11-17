@@ -14,6 +14,7 @@ import threading
 firebase_config = {
     "apiKey": "AIzaSyCBj6bNI8y9C4dsG7-oN-7LdgYHzos6qB4",
   "authDomain": "aquasense-85f49.firebaseapp.com",
+    "databaseURL": "https://aquasense-85f49-default-rtdb.asia-southeast1.firebasedatabase.app",
   "projectId": "aquasense-85f49",
   "storageBucket": "aquasense-85f49.firebasestorage.app",
   "messagingSenderId": "179186728153",
