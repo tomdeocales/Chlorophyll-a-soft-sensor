@@ -12,13 +12,13 @@ import threading
 
 # Firebase Configuration
 firebase_config = {
-    "apiKey": "AIzaSyCBj6bNI8y9C4dsG7-oN-7LdgYHzos6qB4",
-  "authDomain": "aquasense-85f49.firebaseapp.com",
-    "databaseURL": "https://aquasense-85f49-default-rtdb.asia-southeast1.firebasedatabase.app",
-  "projectId": "aquasense-85f49",
-  "storageBucket": "aquasense-85f49.firebasestorage.app",
-  "messagingSenderId": "179186728153",
-  "appId": "1:179186728153:web:c6a05b8d7e09b91ed212c8"
+    "apiKey": "AIzaSyAwZRqZ3nkYJ-2zcm3g7sUBL1mIUNuPO1A",
+  "authDomain": "tadlac-299f8.firebaseapp.com",
+    "databaseURL": "https://tadlac-299f8-default-rtdb.asia-southeast1.firebasedatabase.app",
+  "projectId": "tadlac-299f8",
+  "storageBucket": "tadlac-299f8.firebasestorage.app",
+  "messagingSenderId": "568323038212",
+  "appId": "1:568323038212:web:4918f3da2ce4ee1c4ea951"
 }
 # Firebase Realtime Database URL
 database_url = firebase_config['databaseURL']
