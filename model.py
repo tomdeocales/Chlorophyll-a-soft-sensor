@@ -12,13 +12,12 @@ import threading
 
 # Firebase Configuration
 firebase_config = {
-    "apiKey": "AIzaSyC7L054AGsvX8g9wuVS2hXlJnQqh8lpGjg",
-  "authDomain": "tadlac-lake.firebaseapp.com",
-  "databaseURL": "https://tadlac-lake-default-rtdb.asia-southeast1.firebasedatabase.app",
-  "projectId": "tadlac-lake",
-  "storageBucket": "tadlac-lake.firebasestorage.app",
-  "messagingSenderId": "525847649799",
-  "appId": "1:525847649799:web:d70167ddbd3861b1f9d4a2"
+    "apiKey": "AIzaSyCBj6bNI8y9C4dsG7-oN-7LdgYHzos6qB4",
+  "authDomain": "aquasense-85f49.firebaseapp.com",
+  "projectId": "aquasense-85f49",
+  "storageBucket": "aquasense-85f49.firebasestorage.app",
+  "messagingSenderId": "179186728153",
+  "appId": "1:179186728153:web:c6a05b8d7e09b91ed212c8"
 }
 # Firebase Realtime Database URL
 database_url = firebase_config['databaseURL']
@@ -152,6 +151,7 @@ def save_prediction_to_firebase(predicted_chlorophyll, sensor_data, forecast_val
     current_prediction_ref = f'{database_url}/CurrentPrediction.json'
     current_data = {
         'Predicted_Chlorophyll': predicted_chlorophyll,
+        'timestamp': timestamp
     }
     # Make a PUT request to update the current prediction
     current_response = requests.put(current_prediction_ref, json=current_data)
