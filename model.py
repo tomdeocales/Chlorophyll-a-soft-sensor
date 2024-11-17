@@ -185,7 +185,7 @@ def background_task():
         else:
             st.write("No new sensor data.")
         
-        time.sleep(10)  # Wait 60 seconds before fetching new data
+        time.sleep(300)  # Wait 60 seconds before fetching new data
 
 
 
